@@ -1,0 +1,1 @@
+declare module '@dynamic-labs/sdk-react'
