@@ -1,6 +1,6 @@
 import Redis from 'ioredis';
 import { portfolioUpdateTime } from '../config';
-import { HexString, Coin, Portfolio, PortfolioHistory, PortfolioHistoryKey } from '../@types';
+import { HexString, Portfolio, PortfolioHistory, PortfolioHistoryKey } from '../@types';
 
 
 export class RedisClient {
@@ -28,19 +28,23 @@ export class RedisClient {
     }
 
 
-    setPortfolioHistoryByAddress = async (userAddress: HexString, chainId: number, portfolioHistory: number[]) => {
+    setPortfolioHistoryByAddress = async (
+        userAddress: HexString, 
+        chainId: number, 
+        portfolioWithoutTimestamp: Omit<PortfolioHistory, "updateTime">
+    ): Promise<void> => {
+        const key = this.getPortfolioHistoryKey(userAddress, chainId);
+
         const portfolio: PortfolioHistory = {
             updateTime: this.getTimestamp(),
-            portfolioHistory: portfolioHistory
+            ...portfolioWithoutTimestamp
         }
-
-        const key = this.getPortfolioHistoryKey(userAddress, chainId);
         
         await this.redis.set(key, JSON.stringify(portfolio));
     }
 
 
-    getPortfolioHistoryByAddress = async (userAddress: HexString, chainId: number): Promise<number[]> => {
+    getPortfolioHistoryByAddress = async (userAddress: HexString, chainId: number): Promise<PortfolioHistory | null> => {
         const key = this.getPortfolioHistoryKey(userAddress, chainId);
 
         const response = await this.redis.get(key);
@@ -48,34 +52,34 @@ export class RedisClient {
         if (response) {
             const portfolioHistory: PortfolioHistory = JSON.parse(response);
             if (this.hasTimePassed(portfolioHistory.updateTime))
-                return [];
+                return null;
             else
-                return portfolioHistory.portfolioHistory;
+                return portfolioHistory;
         }
-        else return [];
+        else return null;
     }
 
 
-    setPorfolioByAddress = async (userAddress: HexString, tokens: Coin[][]): Promise<void> => {
+    setPorfolioByAddress = async (userAddress: HexString, networks: Omit<Portfolio, "updateTime">): Promise<void> => {
         const portfolio: Portfolio = {
             updateTime: this.getTimestamp(),
-            tokens: tokens
+            ...networks
         }
 
         await this.redis.set(userAddress, JSON.stringify(portfolio));
     }
 
 
-    getPortfolioByAddress = async (userAddress: HexString): Promise<Coin[][]> => {
+    getPortfolioByAddress = async (userAddress: HexString): Promise<Portfolio | null> => {
         const response = await this.redis.get(userAddress);
 
         if (response) {
             const portfolio: Portfolio = JSON.parse(response);
             if (this.hasTimePassed(portfolio.updateTime))
-                return [];
+                return null;
             else
-                return portfolio.tokens;
+                return portfolio;
         }  
-        else return [];
+        else return null;
     }
 }

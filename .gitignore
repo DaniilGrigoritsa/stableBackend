@@ -2,3 +2,5 @@
 /dist
 
 .env
+covalentKeys.txt
+chainBaseKeys.txt

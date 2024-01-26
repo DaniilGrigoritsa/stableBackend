@@ -1,8 +1,9 @@
 import { ethers } from 'ethers';
 import { Exchange } from "../abstract";
-import { HexString, OnChainSwapCalldata, ChainConstants, Coin } from "../../@types";
-import { AlphaRouter, SwapType, SwapOptions } from '@uniswap/smart-order-router';
+import { calculateAmountOut } from '../../utils';
 import { TradeType, CurrencyAmount, Percent, Token } from '@uniswap/sdk-core';
+import { HexString, OnChainSwapCalldata, ChainConstants, Coin } from "../../@types";
+import { AlphaRouter, SwapType, SwapOptions, SwapRoute } from '@uniswap/smart-order-router';
 
 
 export class Uniswap implements Exchange {
@@ -24,7 +25,10 @@ export class Uniswap implements Exchange {
     }
 
 
-    private generateRoute = async (tokenTo: Coin, tokenFrom: Coin, recipient: HexString, amountIn: string) => {
+    private generateRoute = async (
+        tokenTo: Coin, tokenFrom: Coin, recipient: HexString, amountIn: string
+    ): Promise<SwapRoute | null> => {
+        
         const router = new AlphaRouter({
             chainId: this.chain.id,
             provider: this.provider,
@@ -59,23 +63,32 @@ export class Uniswap implements Exchange {
 
         const bestRoutes = await Promise.all(
             tokensFrom.map((tokenFrom) => {
-                if (tokenFrom.balance) {
-                    return this.generateRoute(tokenTo, tokenFrom, recipient, tokenFrom.balance);
+                if (tokenFrom.amountIn) {
+                    return this.generateRoute(tokenTo, tokenFrom, recipient, tokenFrom.amountIn);
                 }
             })
         );
 
         bestRoutes.map((bestRoute) => {
-            const router = bestRoute?.methodParameters?.to as HexString;
-            const calldata = bestRoute?.methodParameters?.calldata as HexString;
+            if (bestRoute) {
+                const router = bestRoute.methodParameters?.to as HexString;
+                const calldata = bestRoute.methodParameters?.calldata as HexString;
+                
+                const amountOut = calculateAmountOut(
+                    BigInt(bestRoute.quote.numerator.toString()),
+                    BigInt(bestRoute.quote.denominator.toString()),
+                    BigInt(bestRoute.quote.decimalScale.toString())
+                );
 
-            if (router && calldata) {
-                const onChainSwapCalldata: OnChainSwapCalldata = {
-                    calldatas: calldata,
-                    routerAddress: router
+                if (router && calldata) {
+                    const onChainSwapCalldata: OnChainSwapCalldata = {
+                        calldata: calldata,
+                        routerAddress: router,
+                        amountOut: amountOut
+                    }
+
+                    onChainSwapCalldatas.push(onChainSwapCalldata);
                 }
-
-                onChainSwapCalldatas.push(onChainSwapCalldata);
             }
         });
 

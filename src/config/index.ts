@@ -1,30 +1,26 @@
 import dotenv from "dotenv";
-import { ChainConstants, HexString } from "../@types";
+import { getApiKeys } from "../utils";
+import { ChainConstants, HexString, Coin } from "../@types";
 
 dotenv.config({path:__dirname.concat('/./../../.env')});
 
-export const port = process.env.PORT || 8080;
-export const COVALENT_API_KEY = process.env.COVALENT_API_KEY || "";
-export const CHAINBASE_API_KEY = process.env.CHAINBASE_API_KEY || "";
+
 export const WHITE_LIST = ["::1"];
 export const portfolioUpdateTime = 60; // 1 minute
+export const port = process.env.PORT || 8080;
+
+export const covalentKeys = getApiKeys("covalentKeys.txt", 32);
+export const chainbaseKeys = getApiKeys("chainBaseKeys.txt", 27);
 
 // opBNB, zk sync era, polygon zkEVM, Linea
-export const PancakeChainId: number[] = [204, 324, 1101, 59140];
+export const PancakeChainId: number[] = [204, 324, 1101, 59144];
 
 // ethereum, optimism, bsc, polygon, base, arbitrum, avalanche
 export const UniswapChainId: number[] = [1, 10, 56, 137, 8453, 42161, 43114];
 
-// ethereum, optimism, bsc, polygon, zk sync era, base, arbitrum, avalanche
-export const ChainbaseChainId: number[] = [1, 10, 56, 137, 324, 8453, 42161, 43114];
+export const ChainbaseChainId: number[] = [43114];
 
-// opBNB, polygon zkEVM, Linea
-export const CovalentChainId: number[] = [204, 1101, 59140];
-
-export const AllSupportedChaines: number[] = [
-    1, 10, 56, 137, 324, 8453, 42161, 43114,
-    204, 1101, 59144 /* covalent chains */
-] as const;
+export const CovalentChainId: number[] = [1, 10, 56, 137, 324, 8453, 42161]; // [204, 1101, 59144];
 
 export const CovalentChainIdToString: Record<number, string> = {
     1: "eth-mainnet",
@@ -50,6 +46,7 @@ export const UniswapChains: Record<number, ChainConstants> = {
             symbol: "ETH",
             decimals: 18
         },
+        iconUrl: "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=029",
         rpcUrls: {
             default: {
                 http: ["https://rpc.ankr.com/eth"]
@@ -68,6 +65,7 @@ export const UniswapChains: Record<number, ChainConstants> = {
             name: "ETH",
             symbol: "ETH"
         },
+        iconUrl: "https://cryptologos.cc/logos/optimism-ethereum-op-logo.png?v=029",
         rpcUrls: {
             default: {
                 http: ["https://rpc.ankr.com/optimism"]
@@ -86,6 +84,7 @@ export const UniswapChains: Record<number, ChainConstants> = {
             name: "BNB",
             symbol: "BNB"
         },
+        iconUrl: "https://cryptologos.cc/logos/bnb-bnb-logo.png?v=029",
         rpcUrls: {
             default: {
                 http: ["https://rpc.ankr.com/bsc"]
@@ -104,12 +103,13 @@ export const UniswapChains: Record<number, ChainConstants> = {
             name: "MATIC",
             symbol: "MATIC"
         },
+        iconUrl: "https://cryptologos.cc/logos/polygon-matic-logo.png?v=029",
         rpcUrls: {
             default: {
-                http: ["https://rpc.ankr.com/polygon"]
+                http: ["https://polygon-rpc.com"]
             },
             public: {
-                http: ["https://rpc.ankr.com/polygon"]
+                http: ["https://polygon-rpc.com"]
             }
         }
     },
@@ -122,6 +122,7 @@ export const UniswapChains: Record<number, ChainConstants> = {
             name: "ETH",
             symbol: "ETH"
         },
+        iconUrl: "https://altcoinsbox.com/wp-content/uploads/2023/02/base-logo-in-blue.png",
         rpcUrls: {
             default: {
                 http: ["https://rpc.ankr.com/base"]
@@ -140,6 +141,7 @@ export const UniswapChains: Record<number, ChainConstants> = {
             name: "ETH",
             symbol: "ETH"
         },
+        iconUrl: "https://cryptologos.cc/logos/arbitrum-arb-logo.png?v=029",
         rpcUrls: {
             default: {
                 http: ["https://arb1.arbitrum.io/rpc"]
@@ -158,6 +160,7 @@ export const UniswapChains: Record<number, ChainConstants> = {
             name: "AVAX",
             symbol: "AVAX"
         },
+        iconUrl: "https://cryptologos.cc/logos/avalanche-avax-logo.png?v=029",
         rpcUrls: {
             default: {
                 http: ["https://rpc.ankr.com/avalanche"]
@@ -179,6 +182,7 @@ export const PancakeChains: Record<number, ChainConstants> = {
             symbol: "ETH",
             decimals: 18
         },
+        iconUrl: "",
         rpcUrls: {
             default: {
                 http: ["https://mainnet.era.zksync.io"]
@@ -199,6 +203,7 @@ export const PancakeChains: Record<number, ChainConstants> = {
             symbol: "BNB",
             decimals: 18
         },
+        iconUrl: "",
         rpcUrls: {
             default: {
                 http: ["https://opbnb-mainnet-rpc.bnbchain.org"]
@@ -219,6 +224,7 @@ export const PancakeChains: Record<number, ChainConstants> = {
             symbol: "ETH",
             decimals: 18
         },
+        iconUrl: "",
         rpcUrls: {
             default: {
                 http: ["https://rpc.ankr.com/polygon_zkevm"]
@@ -239,6 +245,7 @@ export const PancakeChains: Record<number, ChainConstants> = {
             symbol: "ETH",
             decimals: 18
         },
+        iconUrl: "",
         rpcUrls: {
             default: {
                 http: ["https://rpc.linea.build "]
@@ -271,7 +278,7 @@ export const stargateConfig: Record<number, {chainId: number, router: HexString 
     137: {
         chainId: 109,
         router: "0x45A01E4e04F14f7A4a6702c74187c5F6222033cd",
-        stable: "0x815Bc64F368b70DAbD53cA433F5d1b35c238d692"
+        stable: "0x2f29b5b4b46266418EE98311f5D1FFa56a3954a7" //"0x815Bc64F368b70DAbD53cA433F5d1b35c238d692"
     },
     204: {
         chainId: 0, // Unknown
@@ -307,5 +314,127 @@ export const stargateConfig: Record<number, {chainId: number, router: HexString 
         chainId: 183,
         router: "0x2F6F07CDcf3588944Bf4C42aC74ff24bF56e7590",
         stable: "" // Not deployed
+    }
+} as const;
+
+export const stargateTokens: {[key: number]: {chainId: number, tokens: (Coin & {poolId: number})[]}} = {
+    1: {
+        chainId: 101,
+        tokens: [{
+            chainId: 1,
+            address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            decimals: 6,
+            symbol: "USDC",
+            poolId: 1
+        },
+        {
+            chainId: 1,
+            address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+            decimals: 6,
+            symbol: "USDT",
+            poolId: 2
+        },
+        {
+            chainId: 1,
+            address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+            decimals: 18,
+            symbol: "DAI",
+            poolId: 3
+        }]
+    },
+    10: {
+        chainId: 111,
+        tokens: [{
+            chainId: 10,
+            address: "0x7f5c764cbc14f9669b88837ca1490cca17c31607",
+            decimals: 6,
+            symbol: "USDC",
+            poolId: 1
+        },
+        {
+            chainId: 10,
+            address: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+            decimals: 18,
+            symbol: "DAI",
+            poolId: 3
+        }]
+    },
+    56: {
+        chainId: 102,
+        tokens: [{
+            chainId: 56,
+            address: "0x55d398326f99059fF775485246999027B3197955",
+            decimals: 18,
+            symbol: "USDT",
+            poolId: 2
+        }]
+    },
+    137: {
+        chainId: 109,
+        tokens: [{
+            chainId: 137,
+            address: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+            decimals: 6,
+            symbol: "USDC",
+            poolId: 1
+        },
+        {
+            chainId: 137,
+            address: "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+            decimals: 6,
+            symbol: "USDT",
+            poolId: 2
+        },
+        {
+            chainId: 137,
+            address: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+            decimals: 18,
+            symbol: "DAI",
+            poolId: 3
+        }]
+    },
+    8453: {
+        chainId: 184,
+        tokens: [{
+            chainId: 8453,
+            address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
+            decimals: 6,
+            symbol: "USDC",
+            poolId: 1
+        }]
+    },
+    42161: {
+        chainId: 110,
+        tokens: [{
+            chainId: 42161,
+            address: "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+            decimals: 6,
+            symbol: "USDC",
+            poolId: 1
+        },
+        {
+            chainId: 42161,
+            address: "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
+            decimals: 6,
+            symbol: "USDT",
+            poolId: 2
+        }]
+    },
+    43114: {
+        chainId: 106,
+        tokens: [{
+            chainId: 43114,
+            address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+            decimals: 6,
+            symbol: "USDC",
+            poolId: 1
+        },
+        {
+            chainId: 43114,
+            address: "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
+            decimals: 6,
+            symbol: "USDT",
+            poolId: 2
+        }]
     }
 } as const;

@@ -1,44 +1,61 @@
-import cors from "cors";
 import express from 'express';
 import { 
     whiteList,
     operatePortfolioRequest, 
+    operateGenStableCalldata,
+    operateGenApproveCalldata,
     operatePortfolioHistoryRequest,
     operateGenOnChainCalldataRequest, 
     operateGenCrossChainCalldataRequest
 } from './express';
 import { RedisClient } from './database';
 import { PortfolioManager } from './portfolio';
-import { port, CHAINBASE_API_KEY, COVALENT_API_KEY } from './config';
+import { port, chainbaseKeys, covalentKeys } from './config';
 
 
 const app = express();
 
 const redis = new RedisClient();
-const portfolioManager = new PortfolioManager(CHAINBASE_API_KEY, COVALENT_API_KEY);
+const portfolioManager = new PortfolioManager(chainbaseKeys, covalentKeys);
 
-app.use(cors());
 app.use(express.json());
 // app.use(whiteList());
 
-app.get(
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    next();
+});
+
+app.post(
     "/portfolio",
     operatePortfolioRequest(redis, portfolioManager)
 );
 
-app.get(
+app.post(
     "/portfolio_history",
     operatePortfolioHistoryRequest(redis, portfolioManager)
 )
 
-app.get(
+app.post(
     "/onchain_calldata",
     operateGenOnChainCalldataRequest()
 );
 
-app.get(
+app.post(
     "/crosschain_calldata",
     operateGenCrossChainCalldataRequest()
+);
+
+app.post(
+    "/approve",
+    operateGenApproveCalldata()
+);
+
+app.post(
+    "/stable_calldata",
+    operateGenStableCalldata()
 );
 
 app.listen(port, () => {

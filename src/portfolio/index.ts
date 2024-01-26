@@ -1,9 +1,9 @@
 import Web3 from "web3";
 import axios from "axios";
-import { Coin, HexString } from "../@types";
-import { ChainbaseChainId, AllSupportedChaines } from "../config";
-import { CovalentChainIdToString, CovalentChainId } from "../config";
-import { CovalentClient, Chains } from "../../node_modules/@covalenthq/client-sdk/dist/cjs";
+import { objectIsNotNullOrUndefined } from "../utils";
+import { CovalentClient, Chains } from "@covalenthq/client-sdk";
+import { Coin, HexString, PortfolioHistory, Portfolio, Network } from "../@types";
+import { ChainbaseChainId, CovalentChainIdToString, CovalentChainId, UniswapChains, PancakeChains } from "../config";
 
 
 export class PortfolioManager {
@@ -11,18 +11,18 @@ export class PortfolioManager {
     private web3: Web3;
     private page: number = 1;
     private limit: number = 20;
-    private covalentPrivateKey: string;
-    private chainBasePrivateKey: string;
+    private covalentKeys: string[];
+    private chainBaseKeys: string[];
     private chainbaseUrl: string = "https://api.chainbase.online/v1/account/tokens";
 
 
     constructor(
-        chainBasePrivateKey: string,
-        covalentPrivateKey: string
+        chainBaseKeys: string[],
+        covalentKeys: string[]
     ) {
         this.web3 = new Web3();
-        this.chainBasePrivateKey = chainBasePrivateKey;
-        this.covalentPrivateKey = covalentPrivateKey;
+        this.chainBaseKeys = chainBaseKeys;
+        this.covalentKeys = covalentKeys;
     }
 
 
@@ -31,10 +31,32 @@ export class PortfolioManager {
     }
 
 
-    private getChainbaseTokenList = async (userAddress: HexString, chainId: number): Promise<Coin[]> => {
+    private getPortfolioChange = (portfolioValues: number[]): string => {
+        if (portfolioValues.length) {
+            const start = portfolioValues[0];
+            const end = portfolioValues[portfolioValues.length - 1];
+            if (start === 0 && end === 0) return "0.0";
+            else if (start === 0 && end !== 0) return "100";
+            else if (start !== 0 && end === 0) return "-100";
+            else return ((end / start - 1) * 100).toFixed(2);
+        }
+        else 
+            return "0.0";
+    }
+
+
+    private getTotalPortfolioValue = (portfolioValues: number[]): string => {
+        if (portfolioValues.length)
+            return portfolioValues[portfolioValues.length - 1].toFixed(2);
+        else
+            return "0.00";
+    }
+
+
+    private getChainbaseTokenList = async (userAddress: HexString, chainId: number, index: number): Promise<Network | null> => {
         const headers = {
             "accept": "application/json",
-            "x-api-key": this.chainBasePrivateKey
+            "x-api-key": this.chainBaseKeys[index]
         }
 
         const params = new URLSearchParams({
@@ -48,12 +70,10 @@ export class PortfolioManager {
             `${this.chainbaseUrl}?${params}`,
             {headers}
         );
-
-        const tokens = response.data.data;
     
-        if (tokens) {
-            // any should be set to normal type
-            return tokens.map((token: any) => {
+        if (response.data.data) {
+
+            const tokens: Coin[] = response.data.data.map((token: any) => {
                 return ({
                     chainId: chainId,
                     address: token.contract_address,
@@ -64,35 +84,72 @@ export class PortfolioManager {
                     usdPrice: token.current_usd_price
                 });
             });
+
+            const usdBalance = tokens.reduce((accumulator, token) => {
+                return accumulator + (token.usdPrice ? token.usdPrice : 0)
+            }, 0);
+
+            const network: Network = {
+                id: index.toString(),
+                chainId: chainId,
+                name: {...UniswapChains, ...PancakeChains}[chainId].name,
+                iconUrl: {...UniswapChains, ...PancakeChains}[chainId].iconUrl,
+                balance: usdBalance,
+                percent: "0",
+                tokens: tokens
+            }
+
+            return network;
         }
-        else return [];
+        else 
+            return null;
     }
 
 
-    private getCovalentTokenList = async (userAddress: HexString, chainId: number): Promise<Coin[]> => {
-        const client = new CovalentClient(this.covalentPrivateKey);
+    private getCovalentTokenList = async (userAddress: HexString, chainId: number, index: number): Promise<Network | null> => {
+        const client = new CovalentClient(this.covalentKeys[index]);
 
         const chainString = CovalentChainIdToString[chainId] as Chains;
 
         const resp = await client.BalanceService.getTokenBalancesForWalletAddress(chainString, userAddress);
         
         if (resp.data) {
-            return resp.data.items.map((item) => ({
+
+            const tokens = resp.data.items
+                .filter((item) => !item.native_token)
+                .map<Coin>((item) => ({
+                    chainId: chainId,
+                    address: item.contract_address as HexString,
+                    decimals: item.contract_decimals,
+                    symbol: item.contract_ticker_symbol,
+                    balance: item.balance?.toString(),
+                    iconUrl: item.logo_url,
+                    usdPrice: item.quote
+                }));
+
+            const usdBalance = resp.data.items.reduce((accumulator, token) => {
+                return accumulator + token.quote
+            }, 0);
+
+            const network: Network = {
+                id: index.toString(),
                 chainId: chainId,
-                address: item.contract_address as HexString,
-                decimals: item.contract_decimals,
-                symbol: item.contract_ticker_symbol,
-                balance: item.balance?.toString(),
-                iconUrl: item.logo_url,
-                usdPrice: item.quote
-            }));
+                name: {...UniswapChains, ...PancakeChains}[chainId].name,
+                iconUrl: {...UniswapChains, ...PancakeChains}[chainId].iconUrl,
+                balance: usdBalance,
+                percent: "0",
+                tokens: tokens
+            }
+
+            return network;
         }
-        else return [];
+        else 
+            return null;
     }
 
 
-    getTotalHistoricalPortfolioValue = async (userAddress: HexString, chainId: number): Promise<number[]> => {
-        const client = new CovalentClient(this.covalentPrivateKey);
+    getTotalHistoricalPortfolioValue = async (userAddress: HexString, chainId: number): Promise<Omit<PortfolioHistory, "updateTime">> => {
+        const client = new CovalentClient(this.covalentKeys[0]);
 
         const chainString = CovalentChainIdToString[chainId] as Chains;
 
@@ -104,7 +161,7 @@ export class PortfolioManager {
                 int.push(holding.open.quote), int.push(holding.close.quote) 
             });
             return int;
-        })
+        });
         
         const maxLength = Math.max(...data.map(arr => arr.length));
         const portfolioValues: number[] = new Array(maxLength).fill(0);
@@ -113,19 +170,39 @@ export class PortfolioManager {
             arr.map((num, i) => portfolioValues[i] += num);
         });
 
-        return portfolioValues.map((value) => this.prettify(value));
+        const portfolioHistory: Omit<PortfolioHistory, "updateTime"> = {
+            valueChange: this.getPortfolioChange(portfolioValues),
+            totalValue: this.getTotalPortfolioValue(portfolioValues),
+            portfolioHistory: portfolioValues.map((value) => this.prettify(value))
+        }
+
+        return portfolioHistory;
     }
 
-
-    getPortfolio = async (userAddress: HexString): Promise<Coin[][]> => {
-        const promises = AllSupportedChaines.map((chainId) => {
-            if (ChainbaseChainId.includes(chainId))
-                return this.getChainbaseTokenList(userAddress, chainId);
-            if (CovalentChainId.includes(chainId))
-                return this.getCovalentTokenList(userAddress, chainId);
-            else return [];
+    getPortfolio = async (userAddress: HexString): Promise<Omit<Portfolio, "updateTime">> => {
+        // [...CovalentChainId, ...ChainbaseChainId]
+        const result = [137].map(async (chainId, index) => {
+            try {
+                if (CovalentChainId.includes(chainId)) {
+                    return await this.getCovalentTokenList(userAddress, chainId, index);
+                }
+                else
+                if (ChainbaseChainId.includes(chainId)) {
+                    return await this.getChainbaseTokenList(userAddress, chainId, index);
+                }
+                else return null;
+            }
+            catch (err) {
+                return null;
+            }
         });
 
-        return await Promise.all(promises);
+        const networks = (await Promise.all(result)).filter(objectIsNotNullOrUndefined<Network>);
+
+        const portfolio: Omit<Portfolio, "updateTime"> = {
+            networks: networks
+        }
+
+        return portfolio;
     }
 }

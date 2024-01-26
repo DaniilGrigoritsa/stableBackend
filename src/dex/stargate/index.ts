@@ -17,7 +17,7 @@ export class Stargate {
     }
 
 
-    private getGasOnDstChainValue = async (srcChain: number, dstChain: number, recipient: HexString): Promise<HexString> => {
+    private getGasOnDstChainValue = async (srcChain: number, dstChain: number, recipient: HexString): Promise<string> => {
         const router = stargateConfig[srcChain as keyof typeof stargateConfig].router;
         const dstChainId = stargateConfig[dstChain as keyof typeof stargateConfig].chainId;
         
@@ -34,7 +34,7 @@ export class Stargate {
             [0, 0, "0x0000000000000000000000000000000000000001"]
         ).call();
 
-        return this.web3.utils.toHex(fees["0"]) as HexString;
+        return fees["0"];
     }
 
 
@@ -42,10 +42,13 @@ export class Stargate {
         tokenFromId: number,
         tokenToId: number,  
         recipient: HexString,
-        srcChainId: number,
-        dstChainId: number
+        srcChain: number,
+        dstChain: number
     ): Promise<CrossChainSwapCalldata> => {
-        if (srcChainId !== dstChainId) {
+        if (srcChain !== dstChain && srcChain in stargateConfig && dstChain in stargateConfig) {
+            const router = stargateConfig[srcChain as keyof typeof stargateConfig].router;
+            const dstChainId = stargateConfig[dstChain as keyof typeof stargateConfig].chainId;
+
             const calldata = this.web3.eth.abi.encodeParameters(
                 ["uint16","uint256","uint256","address",[["uint256","uint256","bytes"]],"bytes","bytes"],
                 [
@@ -59,10 +62,11 @@ export class Stargate {
                 ]
             );
 
-            const value = await this.getGasOnDstChainValue(srcChainId, dstChainId, recipient);
+            const value = await this.getGasOnDstChainValue(srcChain, dstChain, recipient);
 
             const data: CrossChainSwapCalldata = {
                 calldata: calldata as HexString,
+                router: router as HexString,
                 gasOnDstChain: value
             }
 
@@ -70,12 +74,7 @@ export class Stargate {
     
         }
         else {
-            const data: CrossChainSwapCalldata = {
-                calldata: "0x",
-                gasOnDstChain: "0x"
-            }
-
-            return data;
+            return { calldata: "0x", gasOnDstChain: "0", router: "0x0000000000000000000000000000000000000000" }
         }
             
     }

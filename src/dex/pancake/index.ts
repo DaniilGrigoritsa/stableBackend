@@ -13,6 +13,7 @@ import {
     SmartRouterTrade,  
     SMART_ROUTER_ADDRESSES
 } from "@pancakeswap/smart-router/evm";
+import { calculateAmountOut } from "../../utils";
 
 
 export class PancakeSwap implements Exchange {
@@ -120,8 +121,8 @@ export class PancakeSwap implements Exchange {
 
         const bestTrades = await Promise.all(
             tokensFrom.map((tokenFrom) => {
-                if (tokenFrom.balance) {
-                    return this.generateBestTrade(tokenFrom, tokenTo, tokenFrom.balance);
+                if (tokenFrom.amountIn) {
+                    return this.generateBestTrade(tokenFrom, tokenTo, tokenFrom.amountIn);
                 }
             })
         );
@@ -133,8 +134,15 @@ export class PancakeSwap implements Exchange {
                     slippageTolerance: new Percent(this.slippageTolerance)
                 });
 
+                const amountOut = calculateAmountOut(
+                    bestTrade.outputAmount.numerator,
+                    bestTrade.outputAmount.denominator,
+                    bestTrade.outputAmount.decimalScale
+                );
+
                 const onChainSwapCalldata: OnChainSwapCalldata = {
-                    calldatas: calldata,
+                    calldata: calldata,
+                    amountOut: amountOut,
                     routerAddress: router
                 }
         
