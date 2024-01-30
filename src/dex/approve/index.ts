@@ -3,7 +3,7 @@ import { AbiItem } from 'web3-utils';
 import erc20Abi from "../../interfaces/erc20";
 import { objectIsNotNullOrUndefined } from "../../utils";
 import { ApproveRequest, ApproveCalldata, HexString } from "../../@types";
-import { UniswapChains, PancakeChains, stargateConfig } from "../../config";
+import { UniswapChains, PancakeChains, SushiChains, stargateConfig } from "../../config";
 
 
 const calculateAmountInRequired = (allowance: string, amountIn: string): string => {
@@ -21,7 +21,7 @@ export const generateApproveCalldata = async (
     chainId: number, owner: HexString, tokens: ApproveRequest["tokens"]
 ): Promise<ApproveCalldata[]> => {
     const stable = stargateConfig[chainId].stable;
-    const provider = {...UniswapChains, ...PancakeChains}[chainId];
+    const provider = {...UniswapChains, ...PancakeChains, ...SushiChains}[chainId];
     const web3 = new Web3(new Web3.providers.HttpProvider(provider.rpcUrls.default.http[0]));
 
     const calldataPromises = tokens.map(async (token) => {

@@ -1,12 +1,12 @@
-import { Uniswap } from "../dex/uni";
 import { RedisClient } from "../database";
-import { Stargate } from "../dex/stargate";
 import { Exchange } from "../dex/abstract";
-import { PancakeSwap } from "../dex/pancake";
 import { PortfolioManager } from "../portfolio";
 import { Request, Response, NextFunction } from "express";
+import { Sushi, Uniswap, Stargate, PancakeSwap } from "../dex";
 import { 
     WHITE_LIST, 
+    SushiChains,
+    SushiChiainId,
     UniswapChainId, 
     PancakeChainId, 
     UniswapChains, 
@@ -32,7 +32,7 @@ const getRequestIp = (req: Request): string | undefined => {
 
 
 const chainIsSupported = (chainId: number): boolean => {
-    return (chainId in stargateConfig && chainId in {...UniswapChains, ...PancakeChains});
+    return (chainId in stargateConfig && [...UniswapChainId, ...PancakeChainId, ...SushiChiainId].includes(chainId));
 }
 
 
@@ -97,7 +97,7 @@ export const operateGenOnChainCalldataRequest = () => {
         const tokensFrom = data.tokensFrom.filter((token) => token.symbol !== data.tokenTo.symbol);
 
         if (!recipient) {
-            res.status(501).send(`recipient is undefined`);
+            res.status(501).send(`Recipient is undefined`);
             return
         }
 
@@ -108,11 +108,13 @@ export const operateGenOnChainCalldataRequest = () => {
             if (chain)
                 exchange = new Uniswap(chain);
         } 
-        else 
-        if (PancakeChainId.includes(chainId)) {
+        else if (PancakeChainId.includes(chainId)) {
             const chain = PancakeChains[chainId];
             if (chain && chain.v2subgraphQlUrl && chain.v3subgraphQlUrl)
                 exchange = new PancakeSwap(chain, chain.v2subgraphQlUrl, chain.v3subgraphQlUrl);
+        }
+        else if (SushiChiainId.includes(chainId)) {
+            exchange = new Sushi(chainId);
         }
         else {
             res.status(500).send(`Unsupported chain id: ${chainId}`);
@@ -138,33 +140,37 @@ export const operateGenOnChainCalldataRequest = () => {
 export const operateGenCrossChainCalldataRequest = () => {
     return async (req: Request, res: Response): Promise<void> => {
         const data: CrossChainRequest = req.body.data;
+
+        const chainId = data.srcChainId;
         const recipient = stargateConfig[data.srcChainId].stable;
 
         if (!recipient) {
-            res.status(502).send(`Recipient is undefined`);
+            res.status(501).send(`Recipient is undefined`);
             return
         }
         
-        let chain: ChainConstants | null = null;
-        if (UniswapChainId.includes(data.srcChainId)) {
-            chain = UniswapChains[data.srcChainId];
+        let chain: Pick<ChainConstants, "rpcUrls"> | null = null;
+        if (UniswapChainId.includes(chainId)) {
+            chain = UniswapChains[chainId];
         }
-        else
-        if (PancakeChainId.includes(data.srcChainId)) {
-            chain = PancakeChains[data.srcChainId];
+        else if (PancakeChainId.includes(chainId)) {
+            chain = PancakeChains[chainId];
+        }
+        else if (SushiChiainId.includes(chainId)) {
+            chain = SushiChains[chainId];
         }
         
         if (chain && recipient) {
             const stargate = new Stargate(chain.rpcUrls.default.http[0]);
 
             const calldata = await stargate.generateCalldataForCrosschainSwap(
-                data.tokenFromId, data.tokenToId, recipient, data.srcChainId, data.dstChainId
+                data.tokenFromId, data.tokenToId, recipient, chainId, data.dstChainId
             );
 
             res.status(200).send(calldata);
         }
         else
-            res.status(500).send(`Unsupported chain id: ${data.srcChainId}`);
+            res.status(500).send(`Unsupported chain id: ${chainId}`);
     }
 }
 
@@ -195,7 +201,7 @@ export const operateGenStableCalldata = () => {
         const chainId = data.chainId;
 
         if (data.onChainCalldatas.length !== data.tokensInAddresses.length) {
-            res.status(501).send(`Incorrect token array length`);
+            res.status(502).send(`Incorrect token array length`);
             return
         } 
         else

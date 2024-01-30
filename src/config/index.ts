@@ -16,7 +16,9 @@ export const chainbaseKeys = getApiKeys("chainBaseKeys.txt", 27);
 export const PancakeChainId: number[] = [204, 324, 1101, 59144];
 
 // ethereum, optimism, bsc, polygon, base, arbitrum, avalanche
-export const UniswapChainId: number[] = [1, 10, 56, 137, 8453, 42161, 43114];
+export const UniswapChainId: number[] = [1, 10, 56, 8453, 42161, 43114];
+
+export const SushiChiainId: number[] = [137];
 
 export const ChainbaseChainId: number[] = [43114];
 
@@ -33,7 +35,8 @@ export const CovalentChainIdToString: Record<number, string> = {
     8453: "base-mainnet",
     42161: "arbitrum-mainnet", 
     43114: "avalanche-mainnet",
-    59144: "linea-mainnet"
+    59144: "linea-mainnet",
+    534352: "scroll-mainnet",
 } as const;
 
 export const UniswapChains: Record<number, ChainConstants> = {
@@ -91,25 +94,6 @@ export const UniswapChains: Record<number, ChainConstants> = {
             },
             public: {
                 http: ["https://rpc.ankr.com/bsc"]
-            }
-        }
-    },
-    137: {
-        id: 137,
-        name: "Polygon",
-        network: "polygon",
-        nativeCurrency: {
-            decimals: 18,
-            name: "MATIC",
-            symbol: "MATIC"
-        },
-        iconUrl: "https://cryptologos.cc/logos/polygon-matic-logo.png?v=029",
-        rpcUrls: {
-            default: {
-                http: ["https://polygon-rpc.com"]
-            },
-            public: {
-                http: ["https://polygon-rpc.com"]
             }
         }
     },
@@ -256,6 +240,35 @@ export const PancakeChains: Record<number, ChainConstants> = {
         },
         v2subgraphQlUrl: "https://graph-query.linea.build/subgraphs/name/pancakeswap/exhange-v2",
         v3subgraphQlUrl: "https://graph-query.linea.build/subgraphs/name/pancakeswap/exchange-v3-linea/"
+    }
+} as const;
+
+export const SushiChains: Record<number, Omit<ChainConstants, "network" | "nativeCurrency">> = {
+    137: {
+        id: 137,
+        name: "Polygon",
+        iconUrl: "https://cryptologos.cc/logos/polygon-matic-logo.png?v=029",
+        rpcUrls: {
+            default: {
+                http: ["https://rpc.ankr.com/polygon"]
+            },
+            public: {
+                http: ["https://rpc.ankr.com/polygon"]
+            }
+        }
+    },
+    534352: {
+        id: 534352,
+        name: "Scroll",
+        iconUrl: "",
+        rpcUrls: {
+            default: {
+                http: ["https://rpc.ankr.com/scroll"]
+            },
+            public: {
+                http: ["https://rpc.ankr.com/scroll"]
+            }
+        }
     }
 } as const;
 

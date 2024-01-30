@@ -9,3 +9,9 @@ Create `covalentkeys.txt` and `chainBaseKeys.txt` files to store API keys first.
 
 #### start
 `npm start` or `npm run dev`
+
+#### error codes
+`403` - Unauthorised
+`500` - Chain id is unsupported
+`501` - Recipient is undefined
+`502` - Incorrect token array length

@@ -1,4 +1,4 @@
-import { Coin, HexString, OnChainSwapCalldata } from "../@types";
+import { Coin, HexString, OnChainSwapCalldata } from "../../@types";
 
 
 export abstract class Exchange {

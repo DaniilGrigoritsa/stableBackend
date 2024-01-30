@@ -30,3 +30,8 @@ export const getApiKeys = (fileName: string, keyLength: number): string[] => {
     const keys = fs.readFileSync(path.join(__dirname, "..", "..", fileName), "utf-8");
     return keys.split("\r\n").filter((key) => key.length === keyLength);
 }
+
+
+export const parseDecimalScale = (decimals: number): string => {
+    return "1".concat("0".repeat(decimals));
+}

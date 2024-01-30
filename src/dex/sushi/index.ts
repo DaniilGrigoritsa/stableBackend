@@ -1,11 +1,11 @@
 import Web3 from "web3";
 import { AbiItem } from "web3-utils";
 import { Exchange } from "../abstract";
+import { SushiChains } from "../../config";
 import axios, { AxiosResponse } from "axios";
-import { objectIsNotNullOrUndefined } from "../../utils";
-import { UniswapChains, PancakeChains } from "../../config";
 import { sushiRouterAbi } from "../../interfaces/sushiRouterAbi";
 import { Coin, HexString, OnChainSwapCalldata, SushiApiResponse } from "../../@types";
+import { objectIsNotNullOrUndefined, calculateAmountOut, parseDecimalScale } from "../../utils";
 
 
 export class Sushi implements Exchange {
@@ -20,7 +20,7 @@ export class Sushi implements Exchange {
     ) {
         this.chainId = chainId.toString();
         this.web3 = new Web3(new Web3.providers.HttpProvider(
-            {...UniswapChains, ...PancakeChains}[chainId].rpcUrls.default.http[0]
+            SushiChains[chainId].rpcUrls.default.http[0]
         ));
     }
 
@@ -31,13 +31,13 @@ export class Sushi implements Exchange {
 
 
     private generateRouteCalldata = async (
-        tokenIn: string, tokenOut: string, recipient: string, amountIn: string, gasPrice: string
+        tokenIn: Coin, tokenOut: Coin, recipient: string, amountIn: string, gasPrice: string
     ): Promise<OnChainSwapCalldata> => {
 
         const params = new URLSearchParams({
             chainId: this.chainId,
-            tokenIn: tokenIn,
-            tokenOut: tokenOut,
+            tokenIn: tokenIn.address,
+            tokenOut: tokenOut.address,
             amount: amountIn,
             maxPriceImpact: this.maxPriceImpact,
             gasPrice: gasPrice,
@@ -51,7 +51,12 @@ export class Sushi implements Exchange {
 
         const routeProcessor = response.data.routeProcessorAddr;
         const routeProcessorArgs = response.data.routeProcessorArgs;
-        const amountOut = response.data.routeProcessorArgs.amountOutMin;
+
+        const amountOut = calculateAmountOut(
+            BigInt(response.data.routeProcessorArgs.amountOutMin),
+            BigInt(1),
+            BigInt(parseDecimalScale(tokenOut.decimals))
+        );
 
         const router = new this.web3.eth.Contract(
             sushiRouterAbi as unknown as AbiItem,
@@ -85,7 +90,7 @@ export class Sushi implements Exchange {
             tokensFrom.map((tokenFrom) => {
                 if (tokenFrom.amountIn) {
                     return this.generateRouteCalldata(
-                        tokenTo.address, tokenFrom.address, recipient, tokenFrom.amountIn, gasPrice
+                        tokenFrom, tokenTo, recipient, tokenFrom.amountIn, gasPrice
                     );
                 }
             })
