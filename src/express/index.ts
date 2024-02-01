@@ -200,11 +200,6 @@ export const operateGenStableCalldata = () => {
         const data: StableRequest = req.body.data;
         const chainId = data.chainId;
 
-        if (data.onChainCalldatas.length !== data.tokensInAddresses.length) {
-            res.status(502).send(`Incorrect token array length`);
-            return
-        } 
-        else
         if (chainIsSupported(chainId)) {
             if (stargateConfig[chainId].stable) {
                 console.log("Generating stable calldata...");

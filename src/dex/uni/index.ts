@@ -84,7 +84,9 @@ export class Uniswap implements Exchange {
                     const onChainSwapCalldata: OnChainSwapCalldata = {
                         calldata: calldata,
                         routerAddress: router,
-                        amountOut: amountOut
+                        amountOut: amountOut,
+                        tokenInAmountIn: "0",
+                        tokenInAddress: "0x0000000000000000000000000000000000000000"
                     }
 
                     onChainSwapCalldatas.push(onChainSwapCalldata);

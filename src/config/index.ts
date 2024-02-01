@@ -18,11 +18,11 @@ export const PancakeChainId: number[] = [204, 324, 1101, 59144];
 // ethereum, optimism, bsc, polygon, base, arbitrum, avalanche
 export const UniswapChainId: number[] = [1, 10, 56, 8453, 42161, 43114];
 
-export const SushiChiainId: number[] = [137];
+export const SushiChiainId: number[] = [137, /* 534352 */];
 
 export const ChainbaseChainId: number[] = [43114];
 
-export const CovalentChainId: number[] = [1, 10, 56, 137, 324, 8453, 42161]; // [204, 1101, 59144];
+export const CovalentChainId: number[] = [1, 10, 56, 137, 324, 8453, 42161, 534352]; // [204, 1101, 59144];
 
 export const CovalentChainIdToString: Record<number, string> = {
     1: "eth-mainnet",
@@ -260,7 +260,7 @@ export const SushiChains: Record<number, Omit<ChainConstants, "network" | "nativ
     534352: {
         id: 534352,
         name: "Scroll",
-        iconUrl: "",
+        iconUrl: "https://img.cryptorank.io/coins/scroll1693474620599.png",
         rpcUrls: {
             default: {
                 http: ["https://rpc.ankr.com/scroll"]
@@ -327,6 +327,11 @@ export const stargateConfig: Record<number, {chainId: number, router: HexString 
         chainId: 183,
         router: "0x2F6F07CDcf3588944Bf4C42aC74ff24bF56e7590",
         stable: "" // Not deployed
+    },
+    534352: {
+        chainId: 0, // Unknown
+        router: "", // Unknown
+        stable: ""  // Not deployed
     }
 } as const;
 

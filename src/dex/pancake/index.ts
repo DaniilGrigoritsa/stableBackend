@@ -143,7 +143,9 @@ export class PancakeSwap implements Exchange {
                 const onChainSwapCalldata: OnChainSwapCalldata = {
                     calldata: calldata,
                     amountOut: amountOut,
-                    routerAddress: router
+                    routerAddress: router,
+                    tokenInAmountIn: "0",
+                    tokenInAddress: "0x0000000000000000000000000000000000000000"
                 }
         
                 onChainSwapCalldatas.push(onChainSwapCalldata);

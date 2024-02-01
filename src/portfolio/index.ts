@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import {
     SushiChains,
+    SushiChiainId,
     UniswapChains, 
     PancakeChains,
     CovalentChainId,
@@ -74,7 +75,7 @@ export class PortfolioManager {
     }
 
 
-    getChainbaseTokenList = async (userAddress: HexString, chainId: number, index: number): Promise<Network | null> => {
+    private getChainbaseTokenList = async (userAddress: HexString, chainId: number, index: number): Promise<Omit<Network, "percent"> | null> => {
         const headers = {
             "accept": "application/json",
             "x-api-key": this.chainBaseKeys[index]
@@ -110,13 +111,12 @@ export class PortfolioManager {
                 return accumulator + (token.usdPrice ? token.usdPrice : 0)
             }, 0);
 
-            const network: Network = {
+            const network: Omit<Network, "percent"> = {
                 id: index.toString(),
                 chainId: chainId,
                 name: {...UniswapChains, ...PancakeChains, ...SushiChains}[chainId].name,
                 iconUrl: {...UniswapChains, ...PancakeChains, ...SushiChains}[chainId].iconUrl,
                 balance: usdBalance,
-                percent: "0",
                 tokens: tokens
             }
 
@@ -127,7 +127,7 @@ export class PortfolioManager {
     }
 
 
-    private getCovalentTokenList = async (userAddress: HexString, chainId: number, index: number): Promise<Network | null> => {
+    private getCovalentTokenList = async (userAddress: HexString, chainId: number, index: number): Promise<Omit<Network, "percent"> | null> => {
         const client = new CovalentClient(this.covalentKeys[index]);
 
         const chainString = CovalentChainIdToString[chainId] as Chains;
@@ -137,7 +137,7 @@ export class PortfolioManager {
         if (resp.data) {
 
             const tokens = resp.data.items
-                .filter((item) => !item.native_token)
+                .filter((item) => !item.native_token && !item.is_spam)
                 .map<Coin>((item) => ({
                     chainId: chainId,
                     address: item.contract_address as HexString,
@@ -148,17 +148,16 @@ export class PortfolioManager {
                     usdPrice: item.quote
                 }));
 
-            const usdBalance = resp.data.items.reduce((accumulator, token) => {
-                return accumulator + token.quote
+            const usdBalance = tokens.reduce((accumulator, token) => {
+                return accumulator + (token.usdPrice ? token.usdPrice : 0)
             }, 0);
 
-            const network: Network = {
+            const network: Omit<Network, "percent"> = {
                 id: index.toString(),
                 chainId: chainId,
                 name: {...UniswapChains, ...PancakeChains, ...SushiChains}[chainId].name,
                 iconUrl: {...UniswapChains, ...PancakeChains, ...SushiChains}[chainId].iconUrl,
                 balance: usdBalance,
-                percent: "0",
                 tokens: tokens
             }
 
@@ -201,8 +200,7 @@ export class PortfolioManager {
     }
 
     getPortfolio = async (userAddress: HexString): Promise<Omit<Portfolio, "updateTime">> => {
-        // [...CovalentChainId, ...ChainbaseChainId, ...SushiChains]
-        const result = [137].map(async (chainId, index) => {
+        const result = [...SushiChiainId].map(async (chainId, index) => {
             try {
                 if (CovalentChainId.includes(chainId)) {
                     return await this.getCovalentTokenList(userAddress, chainId, index);
@@ -218,10 +216,21 @@ export class PortfolioManager {
             }
         });
 
-        const networks = (await Promise.all(result)).filter(objectIsNotNullOrUndefined<Network>);
+        const networks = (await Promise.all(result)).filter(objectIsNotNullOrUndefined<Omit<Network, "percent">>);
+
+        const totalBalance = networks.reduce((accumulator, network) => {
+            return accumulator + network.balance
+        }, 0);
 
         const portfolio: Omit<Portfolio, "updateTime"> = {
-            networks: networks
+            networks: networks.map<Network>((network) => {
+                return ({
+                    ...network,
+                    percent: totalBalance !== 0 ? 
+                        (network.balance / totalBalance * 100).toFixed(1) :
+                        "0.00"
+                });
+            })
         }
 
         return portfolio;

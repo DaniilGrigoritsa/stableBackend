@@ -17,12 +17,14 @@ export const generateStableCalldata = async (stableRequest: StableRequest): Prom
         stable
     );
 
+    const onChainCalldatas = stableRequest.onChainCalldatas;
+
     const calldata = await stableContract.methods.stableSwapMulticall(
         stableRequest.intermediateToken,
-        stableRequest.tokensInAddresses,
-        stableRequest.tokensInAmountsIn,
-        stableRequest.onChainCalldatas.map((calldata) => calldata.calldata),
-        stableRequest.onChainCalldatas.map((calldata) => calldata.routerAddress),
+        onChainCalldatas.map((calldata) => calldata.tokenInAddress),
+        onChainCalldatas.map((calldata) => calldata.tokenInAmountIn),
+        onChainCalldatas.map((calldata) => calldata.calldata),
+        onChainCalldatas.map((calldata) => calldata.routerAddress),
         stableRequest.crossChainCalldata
     ).encodeABI() as HexString;
 

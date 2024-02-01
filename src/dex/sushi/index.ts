@@ -32,51 +32,55 @@ export class Sushi implements Exchange {
 
     private generateRouteCalldata = async (
         tokenIn: Coin, tokenOut: Coin, recipient: string, amountIn: string, gasPrice: string
-    ): Promise<OnChainSwapCalldata> => {
+    ): Promise<OnChainSwapCalldata | null> => {
+        try {
+            const params = new URLSearchParams({
+                chainId: this.chainId,
+                tokenIn: tokenIn.address,
+                tokenOut: tokenOut.address,
+                amount: amountIn,
+                maxPriceImpact: this.maxPriceImpact,
+                gasPrice: gasPrice,
+                to: recipient,
+                preferSushi: "true"
+            });
 
-        const params = new URLSearchParams({
-            chainId: this.chainId,
-            tokenIn: tokenIn.address,
-            tokenOut: tokenOut.address,
-            amount: amountIn,
-            maxPriceImpact: this.maxPriceImpact,
-            gasPrice: gasPrice,
-            to: recipient,
-            preferSushi: "true"
-        });
+            const response: AxiosResponse<SushiApiResponse> = await axios.get(
+                `${this.baseUrl}?${params}`
+            );
 
-        const response: AxiosResponse<SushiApiResponse> = await axios.get(
-            `${this.baseUrl}?${params}`
-        );
+            const routeProcessor = response.data.routeProcessorAddr;
+            const routeProcessorArgs = response.data.routeProcessorArgs;
 
-        const routeProcessor = response.data.routeProcessorAddr;
-        const routeProcessorArgs = response.data.routeProcessorArgs;
+            const amountOut = calculateAmountOut(
+                BigInt(response.data.routeProcessorArgs.amountOutMin),
+                BigInt(1),
+                BigInt(parseDecimalScale(tokenOut.decimals))
+            );
 
-        const amountOut = calculateAmountOut(
-            BigInt(response.data.routeProcessorArgs.amountOutMin),
-            BigInt(1),
-            BigInt(parseDecimalScale(tokenOut.decimals))
-        );
+            const router = new this.web3.eth.Contract(
+                sushiRouterAbi as unknown as AbiItem,
+                routeProcessor
+            );
 
-        const router = new this.web3.eth.Contract(
-            sushiRouterAbi as unknown as AbiItem,
-            routeProcessor
-        );
+            const calldata = router.methods.processRoute(
+                routeProcessorArgs.tokenIn,
+                routeProcessorArgs.amountIn,
+                routeProcessorArgs.tokenOut,
+                routeProcessorArgs.amountOutMin,
+                routeProcessorArgs.to,
+                routeProcessorArgs.routeCode
+            ).encodeABI() as HexString;
 
-        const calldata = router.methods.processRoute(
-            routeProcessorArgs.tokenIn,
-            routeProcessorArgs.amountIn,
-            routeProcessorArgs.tokenOut,
-            routeProcessorArgs.amountOutMin,
-            routeProcessorArgs.to,
-            routeProcessorArgs.routeCode
-        ).encodeABI() as HexString;
-
-        return {
-            amountOut: amountOut,
-            calldata: calldata,
-            routerAddress: routeProcessor
+            return {
+                amountOut: amountOut,
+                calldata: calldata,
+                routerAddress: routeProcessor,
+                tokenInAddress: tokenIn.address,
+                tokenInAmountIn: amountIn
+            }
         }
+        catch (err) { return null; }
     }
 
 

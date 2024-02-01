@@ -90,8 +90,6 @@ export type ApproveRequest = {
 export type StableRequest = {
     chainId: number
     intermediateToken: HexString
-    tokensInAmountsIn: string[]
-    tokensInAddresses: HexString[]
     onChainCalldatas: Omit<OnChainSwapCalldata, "amountOut">[]
     crossChainCalldata: HexString
 }
@@ -117,6 +115,8 @@ export type OnChainSwapCalldata = {
     amountOut: string
     calldata: HexString
     routerAddress: HexString
+    tokenInAmountIn: string,
+    tokenInAddress: HexString
 }
 
 export type CrossChainSwapCalldata = {
