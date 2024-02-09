@@ -50,15 +50,15 @@ export class Stargate {
             const dstChainId = stargateConfig[dstChain as keyof typeof stargateConfig].chainId;
 
             const calldata = this.web3.eth.abi.encodeParameters(
-                ["uint16","uint256","uint256","address",[["uint256","uint256","bytes"]],"bytes","bytes"],
+                ["uint16","uint256","uint256","address",[["uint256","bytes","uint256"]],"bytes","bytes"],
                 [
                     dstChainId,
                     tokenFromId,
                     tokenToId,
                     recipient,
-                    [0, 0, "0x0000000000000000000000000000000000000001"],
+                    [0, "0x0000000000000000000000000000000000000001", 0],
                     recipient,
-                    "0x0000000000000000000000000000000000000000000000000000000000000000"
+                    "0x"
                 ]
             );
 

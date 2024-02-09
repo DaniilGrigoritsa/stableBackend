@@ -79,6 +79,7 @@ export type CrossChainRequest = {
     tokenToId: number 
     srcChainId: number
     dstChainId: number
+    recipient: HexString
 }
 
 export type ApproveRequest = {

@@ -142,12 +142,6 @@ export const operateGenCrossChainCalldataRequest = () => {
         const data: CrossChainRequest = req.body.data;
 
         const chainId = data.srcChainId;
-        const recipient = stargateConfig[data.srcChainId].stable;
-
-        if (!recipient) {
-            res.status(501).send(`Recipient is undefined`);
-            return
-        }
         
         let chain: Pick<ChainConstants, "rpcUrls"> | null = null;
         if (UniswapChainId.includes(chainId)) {
@@ -160,11 +154,11 @@ export const operateGenCrossChainCalldataRequest = () => {
             chain = SushiChains[chainId];
         }
         
-        if (chain && recipient) {
+        if (chain) {
             const stargate = new Stargate(chain.rpcUrls.default.http[0]);
 
             const calldata = await stargate.generateCalldataForCrosschainSwap(
-                data.tokenFromId, data.tokenToId, recipient, chainId, data.dstChainId
+                data.tokenFromId, data.tokenToId, data.recipient, chainId, data.dstChainId
             );
 
             res.status(200).send(calldata);
