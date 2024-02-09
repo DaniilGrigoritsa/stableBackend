@@ -15,14 +15,15 @@ export const chainbaseKeys = getApiKeys("chainBaseKeys.txt", 27);
 // opBNB, zk sync era, polygon zkEVM, Linea
 export const PancakeChainId: number[] = [204, 324, 1101, 59144];
 
-// ethereum, optimism, bsc, polygon, base, arbitrum, avalanche
-export const UniswapChainId: number[] = [1, 10, 56, 8453, 42161, 43114];
+// ethereum, optimism, bsc,  avalanche
+export const UniswapChainId: number[] = [1, 10, 56, 43114];
 
-export const SushiChiainId: number[] = [137, /* 534352 */];
+// palygon, arbitrum, base
+export const SushiChiainId: number[] = [137, 42161, 8453];
 
 export const ChainbaseChainId: number[] = [43114];
 
-export const CovalentChainId: number[] = [1, 10, 56, 137, 324, 8453, 42161, 534352]; // [204, 1101, 59144];
+export const CovalentChainId: number[] = [1, 10, 56, 137, 324, 8453, 42161, 534352];
 
 export const CovalentChainIdToString: Record<number, string> = {
     1: "eth-mainnet",
@@ -94,44 +95,6 @@ export const UniswapChains: Record<number, ChainConstants> = {
             },
             public: {
                 http: ["https://rpc.ankr.com/bsc"]
-            }
-        }
-    },
-    8453: {
-        id: 8453,
-        name: "Base",
-        network: "base",
-        nativeCurrency: {
-            decimals: 18,
-            name: "ETH",
-            symbol: "ETH"
-        },
-        iconUrl: "https://altcoinsbox.com/wp-content/uploads/2023/02/base-logo-in-blue.png",
-        rpcUrls: {
-            default: {
-                http: ["https://rpc.ankr.com/base"]
-            },
-            public: {
-                http: ["https://rpc.ankr.com/base"]
-            }
-        }
-    },
-    42161: {
-        id: 42161,
-        name: "Arbitrum",
-        network: "arbitrum",
-        nativeCurrency: {
-            decimals: 18,
-            name: "ETH",
-            symbol: "ETH"
-        },
-        iconUrl: "https://cryptologos.cc/logos/arbitrum-arb-logo.png?v=029",
-        rpcUrls: {
-            default: {
-                http: ["https://arb1.arbitrum.io/rpc"]
-            },
-            public: {
-                http: ["https://arb1.arbitrum.io/rpc"]
             }
         }
     },
@@ -250,10 +213,36 @@ export const SushiChains: Record<number, Omit<ChainConstants, "network" | "nativ
         iconUrl: "https://cryptologos.cc/logos/polygon-matic-logo.png?v=029",
         rpcUrls: {
             default: {
-                http: ["https://rpc.ankr.com/polygon"]
+                http: ["https://polygon-rpc.com"]
             },
             public: {
-                http: ["https://rpc.ankr.com/polygon"]
+                http: ["https://polygon-rpc.com"]
+            }
+        }
+    },
+    8453: {
+        id: 8453,
+        name: "Base",
+        iconUrl: "https://altcoinsbox.com/wp-content/uploads/2023/02/base-logo-in-blue.png",
+        rpcUrls: {
+            default: {
+                http: ["https://rpc.ankr.com/base"]
+            },
+            public: {
+                http: ["https://rpc.ankr.com/base"]
+            }
+        }
+    },
+    42161: {
+        id: 42161,
+        name: "Arbitrum",
+        iconUrl: "https://cryptologos.cc/logos/arbitrum-arb-logo.png?v=029",
+        rpcUrls: {
+            default: {
+                http: ["https://arb1.arbitrum.io/rpc"]
+            },
+            public: {
+                http: ["https://arb1.arbitrum.io/rpc"]
             }
         }
     },
@@ -311,12 +300,12 @@ export const stargateConfig: Record<number, {chainId: number, router: HexString 
     8453: {
         chainId: 184,
         router: "0x45f1a95a4d3f3836523f5c83673c797f4d4d263b",
-        stable: "" // Not deployed
+        stable: "0x2f29b5b4b46266418EE98311f5D1FFa56a3954a7"
     },
     42161: {
         chainId: 110,
         router: "0x53Bf833A5d6c4ddA888F69c22C88C9f356a41614",
-        stable: "0x6Df6B0A128353c11DAeDD1DA2496fBf68ef7262e"
+        stable: "0x2f29b5b4b46266418EE98311f5D1FFa56a3954a7", //"0x6Df6B0A128353c11DAeDD1DA2496fBf68ef7262e"
     },
     43114: {
         chainId: 106,

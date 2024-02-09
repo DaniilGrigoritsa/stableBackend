@@ -42,7 +42,7 @@ export type ChainConstants = {
       public: ChainRpcUrls
     },
     iconUrl: string,
-    v2subgraphQlUrl?: string,
+    v2subgraphQlUrl?: string
     v3subgraphQlUrl?: string
 }
 
@@ -84,7 +84,7 @@ export type CrossChainRequest = {
 export type ApproveRequest = {
     chainId: number
     owner: HexString
-    tokens: Pick<Coin, "address" | "amountIn">[]
+    tokens: Pick<Coin, "address" | "amountIn" | "symbol">[]
 }
 
 export type StableRequest = {
@@ -115,7 +115,7 @@ export type OnChainSwapCalldata = {
     amountOut: string
     calldata: HexString
     routerAddress: HexString
-    tokenInAmountIn: string,
+    tokenInAmountIn: string
     tokenInAddress: HexString
 }
 
@@ -126,12 +126,13 @@ export type CrossChainSwapCalldata = {
 }
 
 export type ApproveCalldata = {
-    to: HexString, 
+    to: HexString
+    symbol: string
     calldata: HexString
 };
 
 export type StableCalldata = {
-    to: HexString,
+    to: HexString
     calldata: HexString
 }
 

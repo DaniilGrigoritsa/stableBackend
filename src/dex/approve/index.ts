@@ -42,6 +42,7 @@ export const generateApproveCalldata = async (
         
                 return {
                     to: token.address,
+                    symbol: token.symbol,
                     calldata: calldata
                 }
             }

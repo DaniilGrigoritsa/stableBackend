@@ -175,13 +175,17 @@ export class PortfolioManager {
 
         const response = await client.BalanceService.getHistoricalPortfolioForWalletAddress(chainString, userAddress);
 
-        const data = response.data.items.map((item) => {
-            const int: number[] = [];
-            item.holdings.map((holding) => { 
-                int.push(holding.open.quote), int.push(holding.close.quote) 
+        let data: number[][] = [[]];
+
+        if (!response.error) {
+            data = response.data.items.map((item) => {
+                const int: number[] = [];
+                item.holdings.map((holding) => {
+                    int.push(holding.open.quote), int.push(holding.close.quote) 
+                });
+                return int;
             });
-            return int;
-        });
+        }
         
         const maxLength = Math.max(...data.map(arr => arr.length));
         const portfolioValues: number[] = new Array(maxLength).fill(0);
