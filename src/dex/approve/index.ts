@@ -11,7 +11,7 @@ const calculateAmountInRequired = (allowance: string, amountIn: string): string 
     const amountInBn = BigInt(amountIn);
 
     if (amountInBn > allowanceBn)
-        return (amountInBn - allowanceBn).toString();
+        return (amountInBn).toString();
     else
         return "0";
 }
