@@ -5,9 +5,9 @@ import { ChainConstants, HexString, Coin } from "../@types";
 dotenv.config({path:__dirname.concat('/./../../.env')});
 
 
-const BASE_RPC_URL = process.env.POLYGON_RPC_URL || "";
+const BASE_RPC_URL = process.env.BASE_RPC_URL || "";
 const POLYGON_RPC_URL = process.env.POLYGON_RPC_URL || "";
-const ARBITRUM_RPC_URL = process.env.POLYGON_RPC_URL || "";
+const ARBITRUM_RPC_URL = process.env.ARBITRUM_RPC_URL || "";
 
 export const WHITE_LIST = ["::1"];
 export const portfolioUpdateTime = 60; // 1 minute
