@@ -5,6 +5,10 @@ import { ChainConstants, HexString, Coin } from "../@types";
 dotenv.config({path:__dirname.concat('/./../../.env')});
 
 
+const BASE_RPC_URL = process.env.POLYGON_RPC_URL || "";
+const POLYGON_RPC_URL = process.env.POLYGON_RPC_URL || "";
+const ARBITRUM_RPC_URL = process.env.POLYGON_RPC_URL || "";
+
 export const WHITE_LIST = ["::1"];
 export const portfolioUpdateTime = 60; // 1 minute
 export const port = process.env.PORT || 8080;
@@ -213,10 +217,10 @@ export const SushiChains: Record<number, Omit<ChainConstants, "network" | "nativ
         iconUrl: "https://cryptologos.cc/logos/polygon-matic-logo.png?v=029",
         rpcUrls: {
             default: {
-                http: ["https://polygon-rpc.com"]
+                http: [POLYGON_RPC_URL]
             },
             public: {
-                http: ["https://polygon-rpc.com"]
+                http: [POLYGON_RPC_URL]
             }
         }
     },
@@ -226,10 +230,10 @@ export const SushiChains: Record<number, Omit<ChainConstants, "network" | "nativ
         iconUrl: "https://altcoinsbox.com/wp-content/uploads/2023/02/base-logo-in-blue.png",
         rpcUrls: {
             default: {
-                http: ["https://rpc.ankr.com/base"]
+                http: [BASE_RPC_URL]
             },
             public: {
-                http: ["https://rpc.ankr.com/base"]
+                http: [BASE_RPC_URL]
             }
         }
     },
@@ -239,10 +243,10 @@ export const SushiChains: Record<number, Omit<ChainConstants, "network" | "nativ
         iconUrl: "https://cryptologos.cc/logos/arbitrum-arb-logo.png?v=029",
         rpcUrls: {
             default: {
-                http: ["https://arb1.arbitrum.io/rpc"]
+                http: [ARBITRUM_RPC_URL]
             },
             public: {
-                http: ["https://arb1.arbitrum.io/rpc"]
+                http: [ARBITRUM_RPC_URL]
             }
         }
     },
