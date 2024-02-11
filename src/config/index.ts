@@ -4,7 +4,7 @@ import { ChainConstants, HexString, Coin } from "../@types";
 
 dotenv.config({path:__dirname.concat('/./../../.env')});
 
-
+const BSC_RPC_URL = process.env.BSC_RPC_URL || "";
 const BASE_RPC_URL = process.env.BASE_RPC_URL || "";
 const POLYGON_RPC_URL = process.env.POLYGON_RPC_URL || "";
 const ARBITRUM_RPC_URL = process.env.ARBITRUM_RPC_URL || "";
@@ -19,11 +19,11 @@ export const chainbaseKeys = getApiKeys("chainBaseKeys.txt", 27);
 // opBNB, zk sync era, polygon zkEVM, Linea
 export const PancakeChainId: number[] = [204, 324, 1101, 59144];
 
-// ethereum, optimism, bsc,  avalanche
-export const UniswapChainId: number[] = [1, 10, 56, 43114];
+// ethereum, optimism, avalanche
+export const UniswapChainId: number[] = [1, 10, 43114];
 
-// palygon, arbitrum, base
-export const SushiChiainId: number[] = [137, 42161, 8453];
+// bsc, polygon, arbitrum, base
+export const SushiChiainId: number[] = [56, 137, 42161, 8453];
 
 export const ChainbaseChainId: number[] = [43114];
 
@@ -80,25 +80,6 @@ export const UniswapChains: Record<number, ChainConstants> = {
             },
             public: {
                 http: ["https://rpc.ankr.com/optimism"]
-            }
-        }
-    },
-    56: {
-        id: 56,
-        name: "BNB Smart Chain",
-        network: "bsc",
-        nativeCurrency: {
-            decimals: 18,
-            name: "BNB",
-            symbol: "BNB"
-        },
-        iconUrl: "https://cryptologos.cc/logos/bnb-bnb-logo.png?v=029",
-        rpcUrls: {
-            default: {
-                http: ["https://rpc.ankr.com/bsc"]
-            },
-            public: {
-                http: ["https://rpc.ankr.com/bsc"]
             }
         }
     },
@@ -211,6 +192,19 @@ export const PancakeChains: Record<number, ChainConstants> = {
 } as const;
 
 export const SushiChains: Record<number, Omit<ChainConstants, "network" | "nativeCurrency">> = {
+    56: {
+        id: 56,
+        name: "BNB Smart Chain",
+        iconUrl: "https://cryptologos.cc/logos/bnb-bnb-logo.png?v=029",
+        rpcUrls: {
+            default: {
+                http: [BSC_RPC_URL]
+            },
+            public: {
+                http: [BSC_RPC_URL]
+            }
+        }
+    },
     137: {
         id: 137,
         name: "Polygon",
@@ -279,7 +273,7 @@ export const stargateConfig: Record<number, {chainId: number, router: HexString 
     56: {
         chainId: 102,
         router: "0x4a364f8c717cAAD9A442737Eb7b8A55cc6cf18D8",
-        stable: "0x2C2fbF399374c50AFe3C8be390c37fcC9AC0612A"
+        stable: "0x2f29b5b4b46266418EE98311f5D1FFa56a3954a7" //"0x2C2fbF399374c50AFe3C8be390c37fcC9AC0612A"
     },
     137: {
         chainId: 109,
