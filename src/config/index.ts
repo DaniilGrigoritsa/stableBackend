@@ -194,7 +194,7 @@ export const PancakeChains: Record<number, ChainConstants> = {
 export const SushiChains: Record<number, Omit<ChainConstants, "network" | "nativeCurrency">> = {
     56: {
         id: 56,
-        name: "BNB Smart Chain",
+        name: "BSC",
         iconUrl: "https://cryptologos.cc/logos/bnb-bnb-logo.png?v=029",
         rpcUrls: {
             default: {
