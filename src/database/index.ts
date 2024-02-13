@@ -1,6 +1,6 @@
 import Redis from 'ioredis';
 import { portfolioUpdateTime } from '../config';
-import { HexString, Portfolio, PortfolioHistory, PortfolioHistoryKey } from '../@types';
+import { HexString, Portfolio, PortfolioHistory } from '../@types';
 
 
 export class RedisClient {
@@ -18,36 +18,28 @@ export class RedisClient {
 
 
     private hasTimePassed = (updateTime: number): boolean => {
-        if (updateTime + portfolioUpdateTime < this.getTimestamp()) return true;
-        else return false;
-    }
-
-
-    private getPortfolioHistoryKey = (userAddress: HexString, chainid: number): PortfolioHistoryKey => {
-        return `${userAddress}:${chainid}` satisfies PortfolioHistoryKey;
+        if (updateTime + portfolioUpdateTime < this.getTimestamp()) 
+            return true;
+        else 
+            return false;
     }
 
 
     setPortfolioHistoryByAddress = async (
-        userAddress: HexString, 
-        chainId: number, 
+        userAddress: HexString,  
         portfolioWithoutTimestamp: Omit<PortfolioHistory, "updateTime">
     ): Promise<void> => {
-        const key = this.getPortfolioHistoryKey(userAddress, chainId);
-
         const portfolio: PortfolioHistory = {
             updateTime: this.getTimestamp(),
             ...portfolioWithoutTimestamp
         }
         
-        await this.redis.set(key, JSON.stringify(portfolio));
+        await this.redis.set(userAddress, JSON.stringify(portfolio));
     }
 
 
-    getPortfolioHistoryByAddress = async (userAddress: HexString, chainId: number): Promise<PortfolioHistory | null> => {
-        const key = this.getPortfolioHistoryKey(userAddress, chainId);
-
-        const response = await this.redis.get(key);
+    getPortfolioHistoryByAddress = async (userAddress: HexString): Promise<PortfolioHistory | null> => {
+        const response = await this.redis.get(userAddress);
 
         if (response) {
             const portfolioHistory: PortfolioHistory = JSON.parse(response);

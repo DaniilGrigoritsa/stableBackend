@@ -50,22 +50,17 @@ export const whiteList = () => {
 export const operatePortfolioHistoryRequest = (redis: RedisClient, portfolioManager: PortfolioManager) => {
     return async (req: Request, res: Response): Promise<void> => {
         const data: PortfolioHistoryRequest = req.body.data;
-        const chainId = data.chainId;
 
-        if (chainIsSupported(chainId)) {
-            const portfolioHistory = await redis.getPortfolioHistoryByAddress(data.address, chainId);
+        const portfolioHistory = await redis.getPortfolioHistoryByAddress(data.address);
         
-            if (portfolioHistory) {
-                res.status(200).send(portfolioHistory);
-            }
-            else {
-                const fetchedPortfolioHistory = await portfolioManager.getTotalHistoricalPortfolioValue(data.address, chainId);
-                await redis.setPortfolioHistoryByAddress(data.address, chainId, fetchedPortfolioHistory);
-                res.status(200).send(fetchedPortfolioHistory);
-            }
+        if (portfolioHistory) {
+            res.status(200).send(portfolioHistory);
         }
-        else
-            res.status(500).send(`Unsupported chain id: ${chainId}`);
+        else {
+            const fetchedPortfolioHistory = await portfolioManager.getTotalHistoricalPortfolioValue(data.address);
+            await redis.setPortfolioHistoryByAddress(data.address, fetchedPortfolioHistory);
+            res.status(200).send(fetchedPortfolioHistory);
+        }
     }
 }
 

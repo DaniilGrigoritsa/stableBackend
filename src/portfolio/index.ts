@@ -53,6 +53,12 @@ export class PortfolioManager {
     }
 
 
+    private validateValue = (balance: number, previous: number): boolean => {
+        if (balance > 0 && balance / previous < 100) return true;
+        else return false;
+    }
+
+
     private getPortfolioChange = (portfolioValues: number[]): string => {
         if (portfolioValues.length) {
             const start = portfolioValues[0];
@@ -168,8 +174,8 @@ export class PortfolioManager {
     }
 
 
-    getTotalHistoricalPortfolioValue = async (userAddress: HexString, chainId: number): Promise<Omit<PortfolioHistory, "updateTime">> => {
-        const client = new CovalentClient(this.covalentKeys[0]);
+    private getTotalHistoricalPortfolio = async (userAddress: HexString, chainId: number, key: string): Promise<number[]> => {
+        const client = new CovalentClient(key);
 
         const chainString = CovalentChainIdToString[chainId] as Chains;
 
@@ -181,7 +187,20 @@ export class PortfolioManager {
             data = response.data.items.map((item) => {
                 const int: number[] = [];
                 item.holdings.map((holding) => {
-                    int.push(holding.open.quote), int.push(holding.close.quote) 
+                    if (int.length) {
+                        if (this.validateValue(holding.open.quote, int[int.length - 1])) 
+                            int.push(holding.open.quote);
+                        else
+                            int.push(int[int.length - 1]);
+                        if (this.validateValue(holding.close.quote, int[int.length - 1]))
+                            int.push(holding.close.quote);
+                        else 
+                            int.push(int[int.length - 1]);
+                    }
+                    else { 
+                        int.push(holding.open.quote);
+                        int.push(holding.close.quote);
+                    }
                 });
                 return int;
             });
@@ -194,14 +213,38 @@ export class PortfolioManager {
             arr.map((num, i) => portfolioValues[i] += num);
         });
 
-        const portfolioHistory: Omit<PortfolioHistory, "updateTime"> = {
-            valueChange: this.getPortfolioChange(portfolioValues),
-            totalValue: this.getTotalPortfolioValue(portfolioValues),
-            portfolioHistory: portfolioValues.map((value) => this.prettify(value))
+        return portfolioValues.map((value) => this.prettify(value));
+    }
+
+
+    getTotalHistoricalPortfolioValue = async (userAddress: HexString): Promise<Omit<PortfolioHistory, "updateTime">> => {
+        const responses = await Promise.all(
+            SushiChiainId.map((chainId, index) =>
+                this.getTotalHistoricalPortfolio(
+                    userAddress, chainId, this.covalentKeys[index]
+                )
+            )
+        );
+
+        const maxLength = Math.max(...responses.map((response) => response.length));
+
+        const portfolioHistory: number[] = [];
+
+        for (let i = 0; i < maxLength; i++) {
+            let sum = 0;
+            for (const array of responses) {
+                if (i < array.length) { sum += array[i]; }
+            }
+            portfolioHistory.push(sum);
         }
 
-        return portfolioHistory;
+        return {
+            totalValue: this.getTotalPortfolioValue(portfolioHistory),
+            valueChange: this.getPortfolioChange(portfolioHistory),
+            portfolioHistory: portfolioHistory
+        };
     }
+
 
     getPortfolio = async (userAddress: HexString): Promise<Omit<Portfolio, "updateTime">> => {
         const result = [...SushiChiainId].map(async (chainId, index) => {
