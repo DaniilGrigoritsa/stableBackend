@@ -29,32 +29,32 @@ app.use((req, res, next) => {
 });
 
 app.post(
-    "/portfolio",
+    "/api/portfolio",
     operatePortfolioRequest(redis, portfolioManager)
 );
 
 app.post(
-    "/portfolio_history",
+    "/api/portfolio_history",
     operatePortfolioHistoryRequest(redis, portfolioManager)
 )
 
 app.post(
-    "/onchain_calldata",
+    "/api/onchain_calldata",
     operateGenOnChainCalldataRequest()
 );
 
 app.post(
-    "/crosschain_calldata",
+    "/api/crosschain_calldata",
     operateGenCrossChainCalldataRequest()
 );
 
 app.post(
-    "/approve",
+    "/api/approve",
     operateGenApproveCalldata()
 );
 
 app.post(
-    "/stable_calldata",
+    "/api/stable_calldata",
     operateGenStableCalldata()
 );
 
